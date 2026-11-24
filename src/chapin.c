@@ -1,8 +1,45 @@
 #include "chapin.h"
 
+#include <limits.h>
+#include <stdlib.h>
+#include <string.h>
+
 /* Traductor Kynova -> Chapín (grupo 4): recorre el AST y escribe Chapin.gt.
    va pisto/quetzal = splice adam/eve | cabal/sino = atlas/ryan | brega = vita
    clavar = radio (entrada) | shute = diary (salida) */
+
+/* Comentarios del fuente, en orden. El AST no los guarda: el léxico los registra aquí
+   y se reponen antes de la primera instrucción que empieza en una línea posterior.
+   shortcut: un comentario al final de una línea de código sale antes de la siguiente instrucción, y uno al cierre de un bloque sale tras el bloque; mover si piden fidelidad exacta. */
+typedef struct { int line; char *text; } Comment;
+static Comment *comments;
+static int ncomments, capcomments, next_comment;
+static char *pending;
+static int pending_line;
+
+void chapin_comment(int line, const char *text, int open)
+{
+    if (!pending) { pending = strdup(""); pending_line = line; }
+    pending = realloc(pending, strlen(pending) + strlen(text) + 1);
+    if (!pending) { fprintf(stderr, "kynova: memoria insuficiente\n"); exit(2); }
+    strcat(pending, text);
+    if (open) return;
+    if (ncomments == capcomments) {
+        capcomments = capcomments ? capcomments * 2 : 16;
+        comments = realloc(comments, capcomments * sizeof *comments);
+        if (!comments) { fprintf(stderr, "kynova: memoria insuficiente\n"); exit(2); }
+    }
+    comments[ncomments++] = (Comment){ pending_line, pending };
+    pending = NULL;
+}
+
+void chapin_comments_reset(void)
+{
+    for (int i = 0; i < ncomments; i++) free(comments[i].text);
+    free(pending);
+    pending = NULL;
+    ncomments = next_comment = 0;
+}
 
 static void indent(FILE *o, int n) { fprintf(o, "%*s", n * 4, ""); }
 
@@ -32,8 +69,17 @@ static void expr(FILE *o, const AstNode *e)
 
 static void block(FILE *o, const AstNode *b, int lvl);
 
+static void flush_comments(FILE *o, int before_line, int lvl)
+{
+    for (; next_comment < ncomments && comments[next_comment].line < before_line; next_comment++) {
+        indent(o, lvl);
+        fprintf(o, "%s\n", comments[next_comment].text);
+    }
+}
+
 static void stmt(FILE *o, const AstNode *s, int lvl)
 {
+    flush_comments(o, s->line, lvl);
     indent(o, lvl);
     switch (s->kind) {
     case NODE_DECL:
@@ -70,5 +116,7 @@ static void block(FILE *o, const AstNode *b, int lvl)
 
 void chapin_emit(FILE *out, const AstNode *program)
 {
+    next_comment = 0;
     for (int i = 0; i < program->count; i++) stmt(out, program->items[i], 0);
+    flush_comments(out, INT_MAX, 0);
 }

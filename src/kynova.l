@@ -13,6 +13,7 @@
 #include <string.h>
 
 #include "ast.h"
+#include "chapin.h"
 #include "lexer.h"
 
 const char *kyn_filename = "<entrada>";
@@ -91,12 +92,12 @@ ID       {LETTER}({LETTER}|{DIGIT})*
 %%
 
 [ \t\r\n]+              { /* espacios: se descartan */ }
-"//".*                  { /* comentario de línea */ }
+"//".*                  { chapin_comment(yylloc.first_line, yytext, 0); }
 
-"/*"                    { comment_start = yylloc; BEGIN(COMMENT); }
-<COMMENT>"*/"           { BEGIN(INITIAL); }
-<COMMENT>[^*]+          { }
-<COMMENT>"*"            { }
+"/*"                    { comment_start = yylloc; chapin_comment(yylloc.first_line, yytext, 1); BEGIN(COMMENT); }
+<COMMENT>"*/"           { chapin_comment(0, yytext, 0); BEGIN(INITIAL); }
+<COMMENT>[^*]+          { chapin_comment(0, yytext, 1); }
+<COMMENT>"*"            { chapin_comment(0, yytext, 1); }
 <COMMENT><<EOF>>        {
                             lex_error_at(&comment_start, "comentario multilínea sin cerrar (falta '*/')");
                             BEGIN(INITIAL);
@@ -174,6 +175,7 @@ void lexer_reset(void)
 {
     cur_line = 1;
     cur_col = 1;
+    chapin_comments_reset();
     prev_tok_kind = cur_tok_kind = 0;
     memset(&prev_tok_loc, 0, sizeof prev_tok_loc);
     memset(&cur_tok_loc, 0, sizeof cur_tok_loc);
