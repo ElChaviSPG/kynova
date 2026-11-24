@@ -5,7 +5,7 @@
 #include <string.h>
 
 /* Traductor Kynova -> Chapín (grupo 4): recorre el AST y escribe Chapin.gt.
-   va pisto/quetzal = splice adam/eve | cabal/sino = atlas/ryan | brega = vita
+   va pisto/quetzal/cuento = splice adam/eve/plasmid | cabal/sino = atlas/ryan | brega = vita
    aguas = radio (entrada) | shute = diary (salida) */
 
 /* Comentarios del fuente, en orden. El AST no los guarda: el léxico los registra aquí
@@ -76,7 +76,7 @@ static void stmt(FILE *o, const AstNode *s, int lvl)
     indent(o, lvl);
     switch (s->kind) {
     case NODE_DECL:
-        fprintf(o, "va %s%s", s->type == TYPE_ADAM ? "pisto " : s->type == TYPE_EVE ? "quetzal " : "", s->text);
+        fprintf(o, "va %s%s", s->type == TYPE_ADAM ? "pisto " : s->type == TYPE_EVE ? "quetzal " : "cuento ", s->text);
         if (s->child[0]) { fputs(" = ", o); expr(o, s->child[0]); }
         fputs(";\n", o);
         break;

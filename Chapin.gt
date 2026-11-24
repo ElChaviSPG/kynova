@@ -1,6 +1,6 @@
 // Codigo Andante generado por andante (Grupo 6) desde andante.and
 // Traduccion automatica de Andante a Kynova (.kyn)
-va Personaje = "";
+va cuento Personaje = "";
 va pisto estrellas = 0;
 va quetzal tiempo = 0.00;
 // Archivo de prueba completo con operadores binarios y paréntesis (valido3.sa)
