@@ -1,6 +1,9 @@
+// Codigo Andante generado por andante (Grupo 6) desde andante.and
+// Traduccion automatica de Andante a Kynova (.kyn)
 va Personaje = "";
 va pisto estrellas = 0;
 va quetzal tiempo = 0.00;
+// Archivo de prueba completo con operadores binarios y paréntesis (valido3.sa)
 Personaje = "Peach";
 estrellas = 20;
 tiempo = 45.50;
@@ -19,3 +22,7 @@ shute(tiempo);
 brega (estrellas < 25) {
     estrellas = estrellas + (1 + 2);
 }
+/*
+    Cubre declaraciones, lectura, condicionales, ciclo mientras,
+    salida y operaciones aritméticas (+, -, *, /) con paréntesis.
+*/
