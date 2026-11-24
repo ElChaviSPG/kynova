@@ -90,8 +90,9 @@ static void check_condition(AstNode *c)
 
 static void check_assignable(const AstNode *at, const char *name, DataType target, DataType value)
 {
-    if (target == TYPE_EVE && value == TYPE_TEXT)
-        sem_error(at, "tipos incompatibles: no se puede asignar una cadena a '%s' (eve)", name);
+    if (value == TYPE_TEXT && (target == TYPE_ADAM || target == TYPE_EVE))
+        sem_error(at, "tipos incompatibles: no se puede asignar una cadena a '%s' (%s); use plasmid",
+                  name, type_name(target));
     if (target == TYPE_TEXT && (value == TYPE_ADAM || value == TYPE_EVE))
         sem_error(at, "tipos incompatibles: no se puede asignar un número a '%s' (plasmid)", name);
     if (target == TYPE_ADAM && value == TYPE_EVE)
