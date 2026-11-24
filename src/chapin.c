@@ -6,7 +6,7 @@
 
 /* Traductor Kynova -> Chapín (grupo 4): recorre el AST y escribe Chapin.gt.
    va pisto/quetzal = splice adam/eve | cabal/sino = atlas/ryan | brega = vita
-   clavar = radio (entrada) | shute = diary (salida) */
+   aguas = radio (entrada) | shute = diary (salida) */
 
 /* Comentarios del fuente, en orden. El AST no los guarda: el léxico los registra aquí
    y se reponen antes de la primera instrucción que empieza en una línea posterior.
@@ -43,28 +43,21 @@ void chapin_comments_reset(void)
 
 static void indent(FILE *o, int n) { fprintf(o, "%*s", n * 4, ""); }
 
-static int prec(const AstNode *e) { return e->kind == NODE_RELOP ? 0 : e->kind != NODE_BINOP ? 3 : (e->op == OP_MUL || e->op == OP_DIV) ? 2 : 1; }
-
 static void expr(FILE *o, const AstNode *e)
 {
+    if (e->paren) fputc('(', o);
     switch (e->kind) {
     case NODE_INT: case NODE_REAL: case NODE_STR: case NODE_ID: fputs(e->text, o); break;
     case NODE_BINOP:
     case NODE_RELOP: {
-        /* El AST no guarda paréntesis: se reponen según precedencia y asociatividad izquierda. */
-        int p = prec(e);
-        int pl = prec(e->child[0]) < p, pr = prec(e->child[1]) <= p;
-        if (pl) fputc('(', o);
         expr(o, e->child[0]);
-        if (pl) fputc(')', o);
         fprintf(o, " %s ", op_symbol(e->op));
-        if (pr) fputc('(', o);
         expr(o, e->child[1]);
-        if (pr) fputc(')', o);
         break;
     }
     default: break;
     }
+    if (e->paren) fputc(')', o);
 }
 
 static void block(FILE *o, const AstNode *b, int lvl);
@@ -88,7 +81,7 @@ static void stmt(FILE *o, const AstNode *s, int lvl)
         fputs(";\n", o);
         break;
     case NODE_ASSIGN: fprintf(o, "%s = ", s->text); expr(o, s->child[0]); fputs(";\n", o); break;
-    case NODE_READ:   fprintf(o, "clavar(%s);\n", s->text); break;
+    case NODE_READ:   fprintf(o, "aguas(%s);\n", s->text); break;
     case NODE_WRITE:  fputs("shute(", o); expr(o, s->child[0]); fputs(");\n", o); break;
     case NODE_IF:
         fputs("cabal (", o); expr(o, s->child[0]); fputs(") ", o);

@@ -168,7 +168,7 @@ factor
     | REAL_LIT                            { $$ = ast_real($1, @1.first_line, @1.first_column); }
     | STR_LIT                             { $$ = ast_str($1, @1.first_line, @1.first_column); }
     | ID                                  { $$ = ast_id($1, @1.first_line, @1.first_column); }
-    | '(' expresion ')'                   { $$ = $2; }
+    | '(' expresion ')'                   { $$ = $2; $$->paren = 1; }
     ;
 
 %%

@@ -38,6 +38,7 @@ struct AstNode {
     NodeKind kind;
     int line;
     int col;
+    int paren;   /* la expresión venía entre paréntesis en el fuente */
     /* DECL: tipo declarado. Expresiones: tipo inferido por el análisis semántico. */
     DataType type;
     OpKind op;
