@@ -1,0 +1,22 @@
+// Generado automaticamente desde Andante
+
+splice adam Jugador1 = 0;
+splice adam vidas = 0;
+splice eve puntos = 0.00;
+Jugador1 = 0;
+vidas = 5;
+puntos = 10.30;
+radio(puntos);
+atlas (vidas >= 5) {
+    puntos = puntos + 10.50 * 2;
+} ryan {
+    atlas (vidas > 0) {
+        puntos = puntos + 5;
+    } ryan {
+        vidas = 0;
+    }
+}
+diary(puntos);
+vita (vidas < 10) {
+    vidas = vidas + 1;
+}

@@ -1,0 +1,20 @@
+va pisto Jugador1 = 0;
+va pisto vidas = 0;
+va quetzal puntos = 0.00;
+Jugador1 = 0;
+vidas = 5;
+puntos = 10.30;
+clavar(puntos);
+cabal (vidas >= 5) {
+    puntos = puntos + 10.50 * 2;
+} sino {
+    cabal (vidas > 0) {
+        puntos = puntos + 5;
+    } sino {
+        vidas = 0;
+    }
+}
+shute(puntos);
+brega (vidas < 10) {
+    vidas = vidas + 1;
+}
