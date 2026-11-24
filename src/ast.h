@@ -6,7 +6,8 @@
 typedef enum {
     TYPE_UNKNOWN = 0,
     TYPE_ADAM,   /* entero */
-    TYPE_EVE     /* real   */
+    TYPE_EVE,    /* real   */
+    TYPE_TEXT    /* cadena (solo literales) */
 } DataType;
 
 typedef enum {
@@ -22,6 +23,7 @@ typedef enum {
     NODE_RELOP,    /* < > <= >= == !=               */
     NODE_INT,
     NODE_REAL,
+    NODE_STR,
     NODE_ID
 } NodeKind;
 
@@ -66,6 +68,7 @@ AstNode *ast_binop(OpKind op, AstNode *left, AstNode *right, int line, int col);
 AstNode *ast_relop(OpKind op, AstNode *left, AstNode *right, int line, int col);
 AstNode *ast_int(char *lexeme, int line, int col);
 AstNode *ast_real(char *lexeme, int line, int col);
+AstNode *ast_str(char *lexeme, int line, int col);
 AstNode *ast_id(char *name, int line, int col);
 
 void ast_free(AstNode *node);

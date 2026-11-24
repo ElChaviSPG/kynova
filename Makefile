@@ -18,7 +18,7 @@ CPPFLAGS += -D_POSIX_C_SOURCE=200809L -Isrc -I$(BUILD)
 # El código generado por Flex/Bison no está pensado para -Wextra.
 GEN_CFLAGS := $(CFLAGS) -Wno-unused-function -Wno-sign-compare -Wno-unused-parameter
 
-SRCS := src/main.c src/ast.c src/symtab.c src/semantic.c
+SRCS := src/main.c src/ast.c src/symtab.c src/semantic.c src/chapin.c
 OBJS := $(SRCS:src/%.c=$(BUILD)/%.o) $(BUILD)/kynova.tab.o $(BUILD)/lex.yy.o
 
 KYN ?= tests/valid/01_demostrativo.kyn

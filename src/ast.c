@@ -121,6 +121,13 @@ AstNode *ast_int(char *lexeme, int line, int col)
     return n;
 }
 
+AstNode *ast_str(char *lexeme, int line, int col)
+{
+    AstNode *n = new_node(NODE_STR, line, col);
+    n->text = lexeme;
+    return n;
+}
+
 AstNode *ast_real(char *lexeme, int line, int col)
 {
     AstNode *n = new_node(NODE_REAL, line, col);
@@ -154,6 +161,7 @@ const char *type_name(DataType type)
     switch (type) {
     case TYPE_ADAM: return "adam";
     case TYPE_EVE:  return "eve";
+    case TYPE_TEXT: return "texto";
     default:        return "?";
     }
 }
@@ -163,6 +171,7 @@ const char *type_c11_name(DataType type)
     switch (type) {
     case TYPE_ADAM: return "int";
     case TYPE_EVE:  return "double";
+    case TYPE_TEXT: return "const char *";
     default:        return "?";
     }
 }
@@ -230,6 +239,10 @@ static void print_description(FILE *out, const AstNode *n)
         break;
     case NODE_INT:
         fprintf(out, "Entero %s", n->text);
+        print_expr_type(out, n);
+        break;
+    case NODE_STR:
+        fprintf(out, "Cadena %s", n->text);
         print_expr_type(out, n);
         break;
     case NODE_REAL:
@@ -342,6 +355,7 @@ static void dot_label(const AstNode *n, char *buf, size_t size)
     case NODE_RELOP:   snprintf(buf, size, "%s%s", op_symbol(n->op), type); break;
     case NODE_INT:
     case NODE_REAL:
+    case NODE_STR:
     case NODE_ID:      snprintf(buf, size, "%s%s", n->text, type); break;
     }
 }
@@ -376,7 +390,12 @@ static int dot_node(FILE *out, const AstNode *n, int *next_id)
     int id = (*next_id)++;
     char label[160];
     dot_label(n, label, sizeof label);
-    fprintf(out, "  n%d [label=\"%s\", %s];\n", id, label, dot_style(n));
+    fprintf(out, "  n%d [label=\"", id);
+    for (const char *p = label; *p; p++) {
+        if (*p == '"') fputc('\\', out);
+        fputc(*p, out);
+    }
+    fprintf(out, "\", %s];\n", dot_style(n));
 
     int max = (n->kind == NODE_PROGRAM || n->kind == NODE_BLOCK) ? n->count : 3;
     Child *children = xcalloc((size_t)(max > 0 ? max : 1), sizeof *children);

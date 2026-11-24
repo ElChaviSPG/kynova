@@ -140,6 +140,14 @@ ID       {LETTER}({LETTER}|{DIGIT})*
                             TOKEN(REAL_LIT);
                         }
 
+\"[^"\n]*\"            { yylval.str = dup_text(); TOKEN(STR_LIT); }
+
+\"[^"\n]*              {
+                            lex_error_at(&yylloc, "cadena sin cerrar (falta '\"')");
+                            yylval.str = dup_text();
+                            TOKEN(STR_LIT);
+                        }
+
 {DIGIT}+{ID}            {
                             lex_error_at(&yylloc, "identificador inválido '%s': no puede iniciar con un dígito", yytext);
                             yylval.str = dup_text();

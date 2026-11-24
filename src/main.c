@@ -11,6 +11,7 @@
 #include "ast.h"
 #include "lexer.h"
 #include "semantic.h"
+#include "chapin.h"
 #include "symtab.h"
 
 enum { SHOW_TOKENS = 1, SHOW_AST = 2, SHOW_SYMBOLS = 4 };
@@ -27,7 +28,7 @@ static void usage(FILE *out, const char *prog)
             "  -d, --dot ARCH  exporta el AST en formato Graphviz a ARCH\n"
             "                  (imagen: dot -Tpng ARCH -o ast.png)\n"
             "  -q, --quiet     solo muestra errores y el resultado final\n"
-            "  -h, --help      muestra esta ayuda\n"
+            "  -c, --chapin ARCH genera la traducción a Chapín (Chapin.gt)\n  -h, --help      muestra esta ayuda\n"
             "\n"
             "Sin opciones se muestran el AST y la tabla de símbolos.\n"
             "Código de salida: 0 = programa válido, 1 = errores, 2 = error de uso.\n",
@@ -48,6 +49,7 @@ static const char *token_name(int tok)
     case ID:       return "ID";
     case INT_LIT:  return "ENTERO";
     case REAL_LIT: return "REAL";
+    case STR_LIT:  return "CADENA";
     case LE:       return "MENOR_IGUAL";
     case GE:       return "MAYOR_IGUAL";
     case EQ:       return "IGUAL";
@@ -77,7 +79,7 @@ static void dump_tokens(void)
         char pos[24];
         snprintf(pos, sizeof pos, "%d:%d", yylloc.first_line, yylloc.first_column);
         printf("%-9s %-14s %s\n", pos, token_name(tok), yytext);
-        if (tok == ID || tok == INT_LIT || tok == REAL_LIT)
+        if (tok == ID || tok == INT_LIT || tok == REAL_LIT || tok == STR_LIT)
             free(yylval.str);
         count++;
     }
@@ -89,6 +91,7 @@ int main(int argc, char **argv)
     int show = 0, quiet = 0;
     const char *path = NULL;
     const char *dot_path = NULL;
+    const char *chapin_path = NULL;
 
     for (int i = 1; i < argc; i++) {
         const char *a = argv[i];
@@ -98,6 +101,13 @@ int main(int argc, char **argv)
                 return 2;
             }
             dot_path = argv[++i];
+        }
+        else if (!strcmp(a, "-c") || !strcmp(a, "--chapin")) {
+            if (i + 1 >= argc) {
+                fprintf(stderr, "kynova: '%s' requiere el nombre del archivo .gt\n", a);
+                return 2;
+            }
+            chapin_path = argv[++i];
         }
         else if (!strcmp(a, "-t") || !strcmp(a, "--tokens"))  show |= SHOW_TOKENS;
         else if (!strcmp(a, "-a") || !strcmp(a, "--ast"))     show |= SHOW_AST;
@@ -123,7 +133,7 @@ int main(int argc, char **argv)
     }
     if (quiet)
         show = 0;
-    else if (show == 0 && !dot_path)
+    else if (show == 0 && !dot_path && !chapin_path)
         show = SHOW_AST | SHOW_SYMBOLS;
 
     const char *ext = strrchr(path, '.');
@@ -180,6 +190,17 @@ int main(int argc, char **argv)
             ast_print_dot(dot, parse_result);
             fclose(dot);
             printf("AST exportado a %s\n", dot_path);
+        }
+    }
+
+    if (chapin_path && !sem_errors) {
+        FILE *gt = fopen(chapin_path, "w");
+        if (!gt) {
+            perror(chapin_path);
+        } else {
+            chapin_emit(gt, parse_result);
+            fclose(gt);
+            printf("Chapín generado en %s\n", chapin_path);
         }
     }
 

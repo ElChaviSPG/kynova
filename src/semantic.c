@@ -48,6 +48,9 @@ static DataType check_expr(AstNode *e)
     case NODE_REAL:
         e->type = TYPE_EVE;
         break;
+    case NODE_STR:
+        e->type = TYPE_TEXT;
+        break;
     case NODE_ID: {
         Symbol *s = resolve(e);
         if (s) {
@@ -62,7 +65,10 @@ static DataType check_expr(AstNode *e)
         const AstNode *rhs = e->child[1];
         if (e->op == OP_DIV && (rhs->kind == NODE_INT || rhs->kind == NODE_REAL) && rhs->dval == 0.0)
             sem_warning(e, "división entre cero");
-        if (l == TYPE_UNKNOWN || r == TYPE_UNKNOWN)
+        if (l == TYPE_TEXT || r == TYPE_TEXT) {
+            sem_error(e, "no se puede operar con una cadena usando '%s'", op_symbol(e->op));
+            e->type = TYPE_UNKNOWN;
+        } else if (l == TYPE_UNKNOWN || r == TYPE_UNKNOWN)
             e->type = TYPE_UNKNOWN;
         else
             e->type = (l == TYPE_EVE || r == TYPE_EVE) ? TYPE_EVE : TYPE_ADAM;
@@ -76,12 +82,16 @@ static DataType check_expr(AstNode *e)
 
 static void check_condition(AstNode *c)
 {
-    check_expr(c->child[0]);
-    check_expr(c->child[1]);
+    DataType l = check_expr(c->child[0]);
+    DataType r = check_expr(c->child[1]);
+    if (l == TYPE_TEXT || r == TYPE_TEXT)
+        sem_error(c, "no se puede comparar una cadena con '%s'", op_symbol(c->op));
 }
 
 static void check_assignable(const AstNode *at, const char *name, DataType target, DataType value)
 {
+    if (target == TYPE_EVE && value == TYPE_TEXT)
+        sem_error(at, "tipos incompatibles: no se puede asignar una cadena a '%s' (eve)", name);
     if (target == TYPE_ADAM && value == TYPE_EVE)
         sem_error(at, "tipos incompatibles: no se puede asignar un valor eve a '%s' (adam) "
                       "sin perder la parte decimal", name);

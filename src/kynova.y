@@ -54,7 +54,7 @@ int syntax_errors = 0;
 %token RYAN   "ryan"
 %token VITA   "vita"
 %token LE "<=" GE ">=" EQ "==" NE "!="
-%token <str> ID INT_LIT REAL_LIT
+%token <str> ID INT_LIT REAL_LIT STR_LIT
 
 %type <node> lista_instrucciones instruccion declaracion asignacion
 %type <node> entrada salida condicional ciclo bloque
@@ -157,6 +157,7 @@ termino
 factor
     : INT_LIT                             { $$ = ast_int($1, @1.first_line, @1.first_column); }
     | REAL_LIT                            { $$ = ast_real($1, @1.first_line, @1.first_column); }
+    | STR_LIT                             { $$ = ast_str($1, @1.first_line, @1.first_column); }
     | ID                                  { $$ = ast_id($1, @1.first_line, @1.first_column); }
     | '(' expresion ')'                   { $$ = $2; }
     ;
@@ -170,6 +171,7 @@ static const char *symbol_display(yysymbol_kind_t sym)
     case YYSYMBOL_ID:       return "identificador";
     case YYSYMBOL_INT_LIT:  return "número entero";
     case YYSYMBOL_REAL_LIT: return "número real";
+    case YYSYMBOL_STR_LIT:  return "cadena";
     case YYSYMBOL_SPLICE:   return "'splice'";
     case YYSYMBOL_ADAM:     return "'adam'";
     case YYSYMBOL_EVE:      return "'eve'";
