@@ -92,6 +92,8 @@ static void check_assignable(const AstNode *at, const char *name, DataType targe
 {
     if (target == TYPE_EVE && value == TYPE_TEXT)
         sem_error(at, "tipos incompatibles: no se puede asignar una cadena a '%s' (eve)", name);
+    if (target == TYPE_TEXT && (value == TYPE_ADAM || value == TYPE_EVE))
+        sem_error(at, "tipos incompatibles: no se puede asignar un número a '%s' (plasmid)", name);
     if (target == TYPE_ADAM && value == TYPE_EVE)
         sem_error(at, "tipos incompatibles: no se puede asignar un valor eve a '%s' (adam) "
                       "sin perder la parte decimal", name);
@@ -126,8 +128,11 @@ static void check_stmt(AstNode *s)
     }
     case NODE_READ: {
         Symbol *sym = resolve(s);
-        if (sym)
+        if (sym) {
             sym->uses++;
+            if (sym->type == TYPE_TEXT)
+                sem_error(s, "no se puede leer con radio() en '%s' (plasmid)", s->text);
+        }
         break;
     }
     case NODE_WRITE:

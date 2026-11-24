@@ -48,6 +48,7 @@ int syntax_errors = 0;
 %token SPLICE "splice"
 %token ADAM   "adam"
 %token EVE    "eve"
+%token PLASMID "plasmid"
 %token RADIO  "radio"
 %token DIARY  "diary"
 %token ATLAS  "atlas"
@@ -57,7 +58,7 @@ int syntax_errors = 0;
 %token <str> ID INT_LIT REAL_LIT STR_LIT
 
 %type <node> lista_instrucciones instruccion declaracion asignacion
-%type <node> entrada salida condicional ciclo bloque
+%type <node> entrada salida condicional ciclo bloque rama_ryan
 %type <node> condicion expresion termino factor
 %type <type> tipo
 %type <op>   relop
@@ -111,8 +112,15 @@ salida
     ;
 
 condicional
-    : ATLAS '(' condicion ')' bloque RYAN bloque
+    : ATLAS '(' condicion ')' bloque RYAN rama_ryan
                                           { $$ = ast_if($3, $5, $7, @1.first_line, @1.first_column); }
+    ;
+
+/* "ryan atlas (...) {...} ryan ..." equivale a anidar un atlas dentro de ryan:
+   se envuelve el condicional en un bloque para no cambiar el AST. */
+rama_ryan
+    : bloque
+    | condicional                         { $$ = ast_block(@1.first_line, @1.first_column); ast_block_append($$, $1); }
     ;
 
 ciclo
@@ -126,6 +134,7 @@ bloque
 tipo
     : ADAM                                { $$ = TYPE_ADAM; }
     | EVE                                 { $$ = TYPE_EVE; }
+    | PLASMID                             { $$ = TYPE_TEXT; }
     ;
 
 condicion
@@ -175,6 +184,7 @@ static const char *symbol_display(yysymbol_kind_t sym)
     case YYSYMBOL_SPLICE:   return "'splice'";
     case YYSYMBOL_ADAM:     return "'adam'";
     case YYSYMBOL_EVE:      return "'eve'";
+    case YYSYMBOL_PLASMID:  return "'plasmid'";
     case YYSYMBOL_RADIO:    return "'radio'";
     case YYSYMBOL_DIARY:    return "'diary'";
     case YYSYMBOL_ATLAS:    return "'atlas'";

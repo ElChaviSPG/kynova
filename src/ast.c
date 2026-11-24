@@ -161,7 +161,7 @@ const char *type_name(DataType type)
     switch (type) {
     case TYPE_ADAM: return "adam";
     case TYPE_EVE:  return "eve";
-    case TYPE_TEXT: return "texto";
+    case TYPE_TEXT: return "plasmid";
     default:        return "?";
     }
 }

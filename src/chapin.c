@@ -37,7 +37,7 @@ static void stmt(FILE *o, const AstNode *s, int lvl)
     indent(o, lvl);
     switch (s->kind) {
     case NODE_DECL:
-        fprintf(o, "va %s %s", s->type == TYPE_ADAM ? "pisto" : "quetzal", s->text);
+        fprintf(o, "va %s%s", s->type == TYPE_ADAM ? "pisto " : s->type == TYPE_EVE ? "quetzal " : "", s->text);
         if (s->child[0]) { fputs(" = ", o); expr(o, s->child[0]); }
         fputs(";\n", o);
         break;

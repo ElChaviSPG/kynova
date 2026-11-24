@@ -41,6 +41,7 @@ static const char *token_name(int tok)
     case SPLICE:   return "SPLICE";
     case ADAM:     return "ADAM";
     case EVE:      return "EVE";
+    case PLASMID:  return "PLASMID";
     case RADIO:    return "RADIO";
     case DIARY:    return "DIARY";
     case ATLAS:    return "ATLAS";

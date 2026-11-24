@@ -109,6 +109,7 @@ ID       {LETTER}({LETTER}|{DIGIT})*
 "splice"                { TOKEN(SPLICE); }
 "adam"                  { TOKEN(ADAM); }
 "eve"                   { TOKEN(EVE); }
+"plasmid"               { TOKEN(PLASMID); }
 "radio"                 { TOKEN(RADIO); }
 "diary"                 { TOKEN(DIARY); }
 "atlas"                 { TOKEN(ATLAS); }
