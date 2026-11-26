@@ -1,16 +1,29 @@
 # Kynova 1.0 — "Rapture Edition"
 
-Front-end del traductor de **Kynova** (`.kyn`), lenguaje educativo imperativo
-del curso de Compiladores. Esta entrega (Semana 11) implementa:
+Compilador de **Kynova** (`.kyn`), lenguaje educativo imperativo del curso de
+Compiladores. Lee un archivo `.kyn`, lo valida y lo traduce a **Chapín** (`.gt`):
 
 ```
-Archivo .kyn → Flex → Tokens → Bison → AST inicial → Tabla de símbolos
+Archivo .kyn → Flex → Tokens → Bison → AST → Tabla de símbolos → Chapín (.gt)
 ```
+
+## Inicio rápido
+
+```sh
+make                                 # compila: crea el programa ./kynova
+./kynova -q salida.kyn               # valida el archivo (VÁLIDO / INVÁLIDO)
+./kynova -c Chapin.gt salida.kyn     # valida y escribe la traducción en Chapin.gt
+make test                            # corre los 23 casos de prueba
+```
+
+El programa que se ejecuta es `./kynova`, la entrada es un archivo `.kyn`
+(por ejemplo `salida.kyn`) y la salida es `Chapin.gt`. Hay una versión
+interactiva de este manual en `presentacion/index.html`.
 
 **Equipo:** Jonathan Javier Soberanis Castillo · Javier Augusto Estrada Gordillo ·
 Gustavo Adolfo Ortiz Gutiérrez
 
-## Checklist de la entrega parcial
+## Requisitos cubiertos (front-end)
 
 | Requisito                                   | Dónde está                                        |
 |---------------------------------------------|---------------------------------------------------|
@@ -85,6 +98,7 @@ cc -std=c11 ... -o kynova build/*.o           # enlaza todo con main.c, ast.c, s
 | `-s`, `--symbols` | tabla de símbolos (el "Gene Bank")              |
 | `-d`, `--dot ARCH`| exporta el AST en formato Graphviz al archivo `ARCH` |
 | `-q`, `--quiet`   | solo errores y el resultado final               |
+| `-c`, `--chapin ARCH` | escribe la traducción a Chapín en `ARCH` (solo si el programa es válido) |
 | `-h`, `--help`    | ayuda                                           |
 
 Sin opciones se muestran el AST y la tabla de símbolos.
@@ -217,13 +231,25 @@ make test
 | `invalid/09_comentario_sin_cerrar.kyn`   | `/*` sin `*/`                                | léxica              |
 | `invalid/10_relacionales_encadenados.kyn`| `a < b < c`                                  | sintáctica          |
 | `invalid/11_fuera_de_alcance.kyn`        | usar una variable fuera de su bloque         | semántica           |
+| `valid/04_cadenas.kyn`                   | cadenas de texto (`plasmid`)                 | —                   |
+| `valid/05_ryan_atlas_plasmid.kyn`        | `ryan atlas` sin anidar y tipo texto         | —                   |
+| `invalid/12_cadena_en_operacion.kyn`     | operar con una cadena                        | semántica           |
+| `invalid/13_cadena_sin_cerrar.kyn`       | cadena sin comilla de cierre                 | léxica              |
+| `invalid/14_cadena_en_eve.kyn`           | asignar una cadena a `eve`                   | semántica           |
+| `invalid/15_numero_en_plasmid.kyn`       | asignar un número a `plasmid`                | semántica           |
+| `invalid/16_plasmid_en_operacion.kyn`    | operar con una variable `plasmid`            | semántica           |
+| `invalid/17_radio_plasmid.kyn`           | leer un `plasmid` con `radio`                | semántica           |
+| `invalid/18_cadena_en_adam.kyn`          | asignar una cadena a `adam`                  | semántica           |
 
+En total son 23 casos: 5 válidos y 18 inválidos.
 ## Estructura del proyecto
 
 ```
 kynova/
 ├── Makefile
 ├── README.md
+├── salida.kyn        programa de ejemplo que se compila
+├── Chapin.gt         su traducción a Chapín (se regenera con -c)
 ├── src/
 │   ├── kynova.l      Flex: tokens, comentarios, errores léxicos
 │   ├── kynova.y      Bison: gramática EBNF, construcción del AST, errores sintácticos
@@ -231,6 +257,7 @@ kynova/
 │   ├── ast.h/.c      nodos del AST, constructores e impresión en árbol
 │   ├── symtab.h/.c   tabla de símbolos con alcances (Gene Bank)
 │   ├── semantic.h/.c recorrido del AST: llena la tabla y hace validaciones básicas
+│   ├── chapin.h/.c   traductor del AST a Chapín (.gt)
 │   └── main.c        driver: opciones de línea de comandos y orden de las fases
 ├── tests/
 │   ├── run_tests.sh
@@ -267,8 +294,9 @@ kynova/
 - Los relacionales solo aparecen en `condicion`, así que `a < b < c` es un error
   sintáctico: no se encadenan.
 - `ryan` es obligatorio: la única regla de `atlas` exige `bloque RYAN bloque`.
-- Los paréntesis de agrupación no generan nodo en el AST: la agrupación ya queda
-  representada por la forma del árbol.
+- Los paréntesis de agrupación no generan nodo en el AST: la forma del árbol ya
+  representa la agrupación. Cada nodo guarda además una marca de que venía entre
+  paréntesis, para que el traductor los escriba igual que el fuente.
 - Recuperación de errores (`error ';'`, `error bloque`, `condicion: error`) para
   reportar varios errores en una sola corrida.
 - La gramática no tiene conflictos shift/reduce ni reduce/reduce.
@@ -277,9 +305,9 @@ kynova/
 
 Un nodo por construcción del lenguaje: `PROGRAM`, `BLOCK`, `DECL` (splice),
 `ASSIGN`, `READ` (radio), `WRITE` (diary), `IF` (atlas/ryan), `WHILE` (vita),
-`BINOP` (+ - * /), `RELOP` (< > <= >= == !=), `INT`, `REAL` e `ID`.
+`BINOP` (+ - * /), `RELOP` (< > <= >= == !=), `INT`, `REAL`, `STR` e `ID`.
 Cada nodo guarda línea y columna. El análisis semántico anota en cada expresión
-su tipo (`adam` o `eve`), que se muestra al imprimir el árbol.
+su tipo (`adam`, `eve` o `plasmid`), que se muestra al imprimir el árbol.
 
 ### Tabla de símbolos (`symtab.c`, `semantic.c`)
 
@@ -299,8 +327,29 @@ número de usos**, y se muestra también su tipo equivalente en C11 (`adam → i
     y división entre la constante cero.
 - Tipo de una expresión: si algún operando es `eve` el resultado es `eve`; si
   ambos son `adam`, el resultado es `adam`.
+- `plasmid` es el tipo texto (`const char *` en C11). Solo acepta cadenas entre
+  comillas: no se suma, no se compara y no se lee con `radio`; `adam` y `eve` no
+  aceptan cadenas.
 
-## Siguientes fases (no incluidas en esta entrega)
+### Traductor a Chapín (`chapin.c`)
+
+Recorre el AST ya validado y escribe el archivo `.gt` línea por línea. Cambia las
+palabras y conserva la estructura, los paréntesis y los comentarios del fuente.
+Solo se genera si el programa es válido.
+
+| Kynova           | Chapín        |
+|------------------|---------------|
+| `splice adam`    | `va pisto`    |
+| `splice eve`     | `va quetzal`  |
+| `splice plasmid` | `va cuento`   |
+| `atlas`          | `cabal`       |
+| `ryan`           | `sino`        |
+| `ryan atlas`     | `sino { cabal … }` (Chapín no tiene else-if) |
+| `vita`           | `brega`       |
+| `radio`          | `clavar`      |
+| `diary`          | `shute`       |
+
+## Siguientes fases (no incluidas)
 
 IR ("ADAM crudo") y generación de código C11. El AST validado y la tabla de
 símbolos ya contienen lo necesario (tipos anotados, alcances) para construirlas
